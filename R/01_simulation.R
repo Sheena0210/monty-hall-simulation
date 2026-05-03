@@ -12,3 +12,18 @@ monty_hall <- function(switch = TRUE) {
   
   return(choice == prize)
 }
+
+x = monty_hall(TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
