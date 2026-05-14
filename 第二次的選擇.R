@@ -155,21 +155,18 @@ Control_known_distribution <- function(n = 10000, B = 10000, p = 1/3){
   }
   return(c(mean(y), var(y)))
 }
-
 R_default_known <- R_default_known_distribution(n, B, p)
 Inverse_known <- Inverse_known_distribution(n, B, p)
 Control_known <- Control_known_distribution(n, B, p)
-
 Compare_known <- rbind(
   "R內建的函數" = R_default_known,
   "Inverse function" = Inverse_known,
   "Inverse function with controlling var" = Control_known
 )
-
 colnames(Compare_known) <- c("Mean", "Var")
 Compare_known
 
-#(3-1)如果主持人知道跑不知車在哪，比較三種情況（r內建、inverse method、antithetic）sample mean 分布----
+#(3-2)如果主持人不知跑車在哪，比較三種情況（r內建、inverse method、antithetic）sample mean 分布----
 # R 內建 Bernoulli
 R_default_unknown_distribution <- function(n = 10000, B = 10000, p = 1/3){
   y <- numeric(B)
@@ -236,3 +233,174 @@ Compare_all <- rbind(
 colnames(Compare_all) <- c("Mean", "Var")
 Compare_all
 
+
+
+#分佈圖----
+#(3-1)如果主持人知道跑車在哪，比較三種情況（r內建、inverse method、antithetic）sample mean----
+change_known <- function(x){
+  result <- 1 - x
+  return(result)
+}
+# R 內建 Bernoulli
+R_default_known_y <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- rbinom(n, size = 1, prob = p)
+    result <- change_known(x)
+    y[i] <- mean(result)
+  }
+  return(y)
+}
+R_default_known_y <- R_default_known_y(n, B, p)
+
+hist(R_default_known_y,
+     main = "Sampling Distribution of the Estimated Winning Probability 
+     (R Bernoulli Simulation)",
+     xlab = "Estimated winning probability",
+     probability = TRUE)
+abline(v = mean(R_default_known_y),
+       col = "yellow",
+       lty = 2,
+       lwd = 2)
+text(x = mean(R_default_known_y) + 0.002,
+     y = max(hist(R_default_known_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(R_default_known_y), 4)),
+     pos = 4)
+
+
+
+# Inverse function
+Inverse_known_y <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- first_car(n, p)
+    result <- change_known(x)
+    y[i] <- mean(result)
+  }
+  return(y)
+}
+Inverse_known_y <- Inverse_known_y(n, B, p)
+
+hist(Inverse_known_y,
+     main = "Sampling Distribution of the Estimated Winning Probability 
+     (Inverse function)",
+     xlab = "Estimated winning probability",
+     probability = TRUE)
+abline(v = mean(Inverse_known_y),
+       col = "yellow",
+       lty = 2,
+       lwd = 2)
+text(x = mean(Inverse_known_y) + 0.002,
+     y = max(hist(Inverse_known_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(Inverse_known_y), 4)),
+     pos = 4)
+
+
+
+
+# Inverse function + antithetic variates
+Control_known_y <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- first_car_control_var(n, p)
+    result <- change_known(x)
+    y[i] <- mean(result)
+  }
+  return(y)
+}
+Control_known_y <- Control_known_y(n, B, p)
+hist(Control_known_y,
+     main = "Sampling Distribution of the Estimated Winning Probability
+     (Inverse function with control variance)",
+     xlab = "Estimated winning probability",
+     probability = TRUE)
+abline(v = mean(Control_known_y),
+       col = "yellow",
+       lty = 2,
+       lwd = 2)
+
+text(x = mean(Control_known_y) + 0.002,
+     y = max(hist(Control_known_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(Control_known_y), 4)),
+     pos = 4)
+
+#(3-2)如果主持人不知跑車在哪，比較三種情況（r內建、inverse method、antithetic）sample mean----
+
+# R 內建 Bernoulli
+R_default_unknown_y <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- rbinom(n, size = 1, prob = p)
+    result <- change_unknown(x)
+    y[i] <- mean(result)
+  }
+ 
+  return(y)
+}
+R_default_unknown_y <- R_default_unknown_y(n, B, p)
+hist(R_default_unknown_y,
+     main = "Sampling Distribution of the Estimated Winning Probability 
+     (R Bernoulli Simulation)",
+     xlab = "Estimated winning probability",
+     probability = TRUE)
+
+abline(v = mean(R_default_unknown_y),
+       col = "yellow",
+       lty = 2,
+       lwd = 2)
+text(x = mean(R_default_unknown_y) + 0.002,
+     y = max(hist(R_default_unknown_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(R_default_unknown_y), 4)),
+     pos = 4)
+
+
+# Inverse function
+Inverse_unknown_y <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- first_car(n, p)
+    result <- change_unknown(x)
+    y[i] <- mean(result)
+  }
+  return(y)
+}
+Inverse_unknown_y <- Inverse_unknown_y(n, B, p)
+hist(Inverse_unknown_y,
+     main = "Sampling Distribution of the Estimated Winning Probability 
+     (Inverse function)",
+     xlab = "Estimated winning probability",
+     probability = TRUE)
+abline(v = mean(Inverse_unknown_y),
+       col = "yellow",
+       lty = 2,
+       lwd = 2)
+text(x = mean(Inverse_unknown_y) + 0.002,
+     y = max(hist(Inverse_unknown_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(Inverse_unknown_y), 4)),
+     pos = 4)
+
+
+# Inverse function + antithetic variates
+Control_unknown_y <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- first_car_control_var(n, p)
+    result <- change_unknown(x)
+    y[i] <- mean(result)
+  }
+  return(y)
+}
+Control_unknown_y <- Control_unknown_y(n, B, p)
+hist(Control_unknown_y,
+     main = "Sampling Distribution of the Estimated Winning Probability
+     (Inverse function with control variance)",
+     xlab = "Estimated winning probability",
+     probability = TRUE)
+abline(v = mean(Control_unknown_y),
+       col = "yellow",
+       lty = 2,
+       lwd = 2)
+text(x = mean(Control_unknown_y) + 0.002,
+     y = max(hist(Control_unknown_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(Control_unknown_y), 4)),
+     pos = 4)
