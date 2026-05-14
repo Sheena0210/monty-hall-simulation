@@ -17,7 +17,7 @@ for(i in 1:1000){
 mean(x) #0.32
 var(x)  #0.2178178
 
-#驗證換門x2之後選到跑車的機率 0.6677----
+#驗證換門(x2)之後選到跑車的機率 0.6677----
 set.seed(1)
 #一開始是否選到跑車
 #選到跑車=1. 沒選到跑車=0
@@ -161,4 +161,79 @@ colnames(Compare_sample_mean_distribution) <- c("Mean", "Var")
 
 Compare_sample_mean_distribution
 
+#分佈圖----
+#回傳是整個ｙ
+set.seed(1)
+n <- 10000
+B <- 10000
+p <- 1/3
+# R 內建 Bernoulli 的 sample mean
+R_default_distribution <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- rbinom(n, size = 1, prob = p)
+    y[i] <- mean(x)
+  }
+  return(y)
+}
+# inverse function 的 sample mean
+Inverse_distribution <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  
+  for(i in 1:B){
+    x <- first_car(n, p)
+    y[i] <- mean(x)
+  }
+  return(y)
+}
 
+# inverse function + control variance 的 sample mean
+Control_distribution <- function(n = 10000, B = 10000, p = 1/3){
+  y <- numeric(B)
+  for(i in 1:B){
+    x <- first_car_control_var(n, p)
+    y[i] <- mean(x)
+  }
+  return(y)
+}
+
+# 執行
+R_default_y <- R_default_distribution(n, B, p)
+Inverse_y <- Inverse_distribution(n, B, p)
+Control_y <- Control_distribution(n, B, p)
+
+#R Bernoulli Simulation
+hist(R_default_y,
+     main = "Sampling Distribution of the Estimated Winning Probability 
+     (R Bernoulli Simulation)",
+     xlab = "Estimated probability",
+     probability = TRUE)
+abline(v=mean(R_default_y),col="yellow",lty=2,lwd=2)
+text(x = mean(R_default_y) + 0.008,
+     y = max(hist(R_default_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(R_default_y), 4)),
+     pos = 4)
+
+#Inverse function
+hist(Inverse_y,
+     main = "Sampling Distribution of the Estimated Winning Probability 
+     (Inverse function)",
+     xlab = "Estimated probability",
+     probability = TRUE)
+abline(v=mean(Inverse_y),col="yellow",lty=2,lwd=2)
+text(x = mean(Inverse_y) + 0.008,
+     y = max(hist(Inverse_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(Inverse_y), 4)),
+     pos = 4)
+
+#Control_y
+hist(Control_y,
+     main = "Sampling Distribution of the Estimated Winning Probability
+     (Inverse function with control variance)",
+     xlab = "Estimated probability",
+     probability = TRUE)
+abline(v=mean(Control_y),col="yellow",lty=2,lwd=2)
+text(x = mean(Control_y) + 0.008,
+     y = max(hist(Control_y, plot = FALSE)$density) * 0.9,
+     labels = paste0("Mean = ", round(mean(Control_y), 4)),
+     pos = 4)
