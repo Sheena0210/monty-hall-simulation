@@ -166,6 +166,7 @@ Compare_known <- rbind(
 colnames(Compare_known) <- c("Mean", "Var")
 Compare_known
 
+
 #(3-2)如果主持人不知跑車在哪，比較三種情況（r內建、inverse method、antithetic）sample mean 分布----
 # R 內建 Bernoulli
 R_default_unknown_distribution <- function(n = 10000, B = 10000, p = 1/3){
@@ -324,6 +325,36 @@ text(x = mean(Control_known_y) + 0.002,
      labels = paste0("Mean = ", round(mean(Control_known_y), 4)),
      pos = 4)
 
+#variance reduction
+variance_reduction <- (var(Inverse_known_y) - var(Control_known_y)) / var(Inverse_known_y) * 100
+variance_reduction
+
+d1 <- density(R_default_known_y)
+d2 <- density(Inverse_known_y)
+d3 <- density(Control_known_y)
+plot(d1,
+     main = "Comparison of three Probability Distributions",
+     xlab = "Probability",
+     ylab = "Density",
+     col = "red",
+     lwd = 2,
+     xlim = range(c(d1$x, d2$x, d3$x)),
+     ylim = c(0, max(c(d1$y, d2$y, d3$y)) * 1.1))
+lines(d2,
+      col = "blue",
+      lwd = 2,
+      lty = 2)
+lines(d3,
+      col = "darkgreen",
+      lwd = 2,
+      lty = 3)
+legend("topright",
+       legend = c("rbinom", "inverse function", "control variance"),
+       col = c("red", "blue", "darkgreen"),
+       lwd = 2,
+       lty = c(1, 2, 3))
+
+
 #(3-2)如果主持人不知跑車在哪，比較三種情況（r內建、inverse method、antithetic）sample mean----
 
 # R 內建 Bernoulli
@@ -404,3 +435,34 @@ text(x = mean(Control_unknown_y) + 0.002,
      y = max(hist(Control_unknown_y, plot = FALSE)$density) * 0.9,
      labels = paste0("Mean = ", round(mean(Control_unknown_y), 4)),
      pos = 4)
+
+#variance reduction
+variance_reduction_2 <- (var(Inverse_unknown_y) - var(Control_unknown_y)) / var(Inverse_unknown_y) * 100
+variance_reduction_2
+
+d1 <- density(R_default_unknown_y)
+d2 <- density(Inverse_unknown_y)
+d3 <- density(Control_unknown_y)
+plot(d1,
+     main = "Comparison of three Probability Distributions",
+     xlab = "Probability",
+     ylab = "Density",
+     col = "red",
+     lwd = 2,
+     xlim = range(c(d1$x, d2$x, d3$x)),
+     ylim = c(0, max(c(d1$y, d2$y, d3$y)) * 1.1))
+lines(d2,
+      col = "blue",
+      lwd = 2,
+      lty = 2)
+lines(d3,
+      col = "darkgreen",
+      lwd = 2,
+      lty = 3)
+legend("topright",
+       legend = c("rbinom", "inverse function", "control variance"),
+       col = c("red", "blue", "darkgreen"),
+       lwd = 2,
+       lty = c(1, 2, 3))
+
+
