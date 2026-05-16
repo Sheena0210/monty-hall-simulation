@@ -76,6 +76,9 @@ legend("topright",
 
 
 #jackknife 還不確定----
+#mean:0.66602
+#bias:0
+#se: 0.001502186
 set.seed(1)
 # inverse function
 first_car <- function(n = 1000, p = 1/3){
@@ -114,21 +117,27 @@ mean(jack_mean)
 
 #se
 jack_se <- sqrt((j - 1) / j * sum((jack_mean - mean(jack_mean))^2))
+jack_se
 #bias
 jack_bias <- (j - 1) * (mean(jack_mean) - original_mean)
-
+jack_bias 
 #95% CI
 jack_ci <- quantile(jack_mean, c(0.025, 0.975))
 
 # Jackknife mean
 jack_m <- mean(jack_mean)
+jack_m
+
 
 hist(jack_mean,
      probability = TRUE,
      breaks = 20,
      main = "Jackknife Distribution",
      xlab = "Jackknife Mean",
-     ylab = "Density")
+     ylab = "Density",
+     xlim = c(min(jack_mean) - 0.0025,
+              max(jack_mean) + 0.0025),
+     ylim=c(0,4000))
 
 lines(density(jack_mean),
       lwd = 2)
@@ -196,7 +205,7 @@ stay_dist   <- simulate_stay_distribution(B = 1000, n = 1000)
 mean(switch_dist) #0.666746
 mean(stay_dist) #0.333708
 
-#勝率差異 :0.333038
+#實際勝率差異 :0.333038
 obs <- mean(switch_dist) - mean(stay_dist)
 obs
 
@@ -213,6 +222,7 @@ for(b in 1:B_perm){
   permutation_dist[b] <- mean(z1) - mean(z2)
 }
 
+mean(permutation_dist)
 # 單尾 p-value：檢定換門是否大於不換門 p=0
 p_value <- mean(permutation_dist >= obs)
 p_value
@@ -227,10 +237,21 @@ hist(permutation_dist,
      main = "Permutation Null Distribution",
      xlab = "Mean Difference: Switch - Stay",
      ylab = "Density",
-     xlim = xrange)
+     xlim = xrange,
+     ylim=c(0,60))
 lines(density(permutation_dist),
       lwd = 2,
       col = "blue")
+
+permutation_result <- data.frame(
+  Observed_Difference = obs,
+  Permutation_Mean = mean(permutation_dist),
+  P_value = p_value,
+  CI_lower = ci[1],
+  CI_upper = ci[2]
+)
+
+permutation_result
 
 # 平均數
 abline(v = mean(permutation_dist),
@@ -246,7 +267,7 @@ abline(v = ci,
 abline(v = obs,
        col = "darkgreen",
        lwd = 2)
-legend("topright",
+legend(x = 0.08, y = 55,
        legend = c("Density","Permutation Mean","95% CI","Observed Difference"),
        col = c("blue","purple","red","darkgreen"),
        lwd = 2,
