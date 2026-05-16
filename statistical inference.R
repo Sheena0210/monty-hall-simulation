@@ -252,3 +252,143 @@ legend("topright",
        lwd = 2,
        lty = c(1, 1, 2, 1),
        bty = "n")
+
+#MCMC----
+set.seed(1)
+n <- 1000
+#step1 主持人知道車在哪，參賽者會贏的機率2/3  不知道1/3
+w_known <- rbinom(n, size = 1, prob = 2/3)
+w_unknown <- rbinom(n, size = 1, prob = 1/3)
+
+#step2 mcmc利用posterior
+#p機率在0~1之間
+#再利用Bernoulli likelihood 的 log：
+#prior設成Uniform(0,1)，所以posterior跟likelihood成正比
+log_posterior <- function(p, y){
+  if(p <= 0 || p >= 1){
+    return(-Inf)
+  }
+  loglik <- sum(y * log(p) + (1 - y) * log(1 - p))
+  return(loglik)
+}
+
+#step3 MH
+MH <- function(y, m = 10000, proposal_sd = 0.03){
+  p_chain <- numeric(m)
+  p_chain[1] <- 0.5
+  reject <- 0
+  for(i in 2:m){
+    current <- p_chain[i - 1]
+    # proposal distribution
+      proposal <- rnorm(1, mean = current, sd = proposal_sd)
+      #計算新值跟舊值posterior差異
+      #log ratio 可以轉
+      log_r <- log_posterior(proposal, y) -log_posterior(current, y)
+      #log ratio 轉回普通比例
+      r <- exp(log_r)
+      #隨機生成0到1的變數 
+      u <- runif(1)
+      #如果比新值好 則r>1 accept
+      if(u <= min(1, r)){
+        p_chain[i] <- proposal
+      }else{
+        p_chain[i] <- current
+        reject <- reject + 1
+      }
+  }
+  #如果拒絕，就留在原本的p 同時拒絕次數加 1
+    return(list(chain = p_chain,
+                reject_rate = reject / m))
+}
+#step4
+mh_known <- MH(w_known)
+mh_unknown <- MH(w_unknown)
+
+#step5
+#burn-in period:chain前2000次的抽樣先不用 ->從trace plot可知前期波動大
+burnin <- 2000
+
+#取出主持人知道情況下，第 2001 到 10000 次的p
+p_known <- mh_known$chain[(burnin + 1):10000]
+#取出主持人不知道情況下，第 2001 到 10000 次的p
+p_unknown <- mh_unknown$chain[(burnin + 1):10000]
+
+
+### Step 6：整理 posterior 結果 ###
+#                   Posterior Mean   Posterior  SD        2.5%     97.5%      Reject Rate
+#主持人知道車在哪        0.6653407       0.01512452   0.6355856 0.6938374      0.4978
+#主持人不知道車在哪      0.3391910       0.01496857   0.3099947 0.3690889      0.5002
+result <- rbind(
+  "主持人知道車在哪" = c(
+    mean(p_known),
+    sd(p_known),
+    quantile(p_known, 0.025),
+    quantile(p_known, 0.975),
+    mh_known$reject_rate
+  ),
+  
+  "主持人不知道車在哪" = c(
+    mean(p_unknown),
+    sd(p_unknown),
+    quantile(p_unknown, 0.025),
+    quantile(p_unknown, 0.975),
+    mh_unknown$reject_rate
+  )
+)
+colnames(result) <- c("Posterior Mean", "Posterior SD",
+                      "2.5%", "97.5%", "Reject Rate")
+
+result
+par(mfrow = c(1, 2))
+
+hist(p_known,
+     probability = TRUE,
+     main = "Posterior of P-Value
+     (host knows the correct answer)",
+     xlab = "Winning probability p")
+
+abline(v = mean(p_known),
+       col = "red",
+       lty = 2,
+       lwd = 2)
+
+
+hist(p_unknown,
+     probability = TRUE,
+     main = "Posterior of P-Value
+     (host doesn't know the correct answer)",
+     xlab = "Winning probability p")
+
+abline(v = mean(p_unknown),
+       col = "red",
+       lty = 2,
+       lwd = 2)
+
+# Trace plot：主持人知道車在哪
+
+plot(mh_known$chain,
+     type = "l",
+     main = "Trace Plot of P-Value
+     (host knows the correct answer)",
+     xlab = "iteration",
+     ylab = "p")
+
+abline(h = mean(p_known),
+       col = "red",
+       lwd = 2)
+
+# Trace plot：主持人不知道車在哪
+plot(mh_unknown$chain,
+     type = "l",
+     main = "Trace Plot of P-Value
+     (host doesn't know the correct answer)",
+     xlab = "iteration",
+     ylab = "p")
+
+abline(h = mean(p_unknown),
+       col = "red",
+       lwd = 2)
+
+
+  
+  
