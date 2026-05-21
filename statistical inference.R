@@ -109,54 +109,68 @@ original_mean
 # Jackknife
 j <- length(people)
 jack_mean <- numeric(j)
-
+# leave one out
 for(i in 1:j){
   jack_mean[i] <- mean(people[-i])
 }
 mean(jack_mean)
-
 #se
 jack_se <- sqrt((j - 1) / j * sum((jack_mean - mean(jack_mean))^2))
 jack_se
-#bias
-jack_bias <- (j - 1) * (mean(jack_mean) - original_mean)
-jack_bias 
-#95% CI
-jack_ci <- quantile(jack_mean, c(0.025, 0.975))
 
 # Jackknife mean
 jack_m <- mean(jack_mean)
 jack_m
 
+#95% CI->+-1.96
+jack_ci_lower = jack_m - 1.96 * jack_se 
+jack_ci_upper = jack_m  + 1.96 * jack_se
+
+v1 = c(jack_ci_lower, jack_ci_upper)
+
+#bias
+jack_bias <- (j - 1) * (mean(jack_mean) - original_mean)
+jack_bias 
+
+xrange <- range (c(jack_mean,v1))
 
 hist(jack_mean,
      probability = TRUE,
-     breaks = 20,
+     breaks = 30,
      main = "Jackknife Distribution",
      xlab = "Jackknife Mean",
      ylab = "Density",
-     xlim = c(min(jack_mean) - 0.0025,
-              max(jack_mean) + 0.0025),
-     ylim=c(0,4000))
+     xlim = xrange
+     )
 
+# density curve
 lines(density(jack_mean),
-      lwd = 2)
+      lwd = 2,
+      col = "black")
 # mean:藍線
 abline(v = jack_m,
        col = "blue",
        lwd = 2)
-
 #95% CI:紅色虛線
-abline(v = jack_ci,
+#ci_lower
+abline(v = v1[1],
+       col = "red",
+       lwd = 2,
+       lty = 2)
+#ci_upper
+abline(v = v1[2],
        col = "red",
        lwd = 2,
        lty = 2)
 
 legend("topright",
-       legend = c("Density", "Mean", "95% CI"),
+       legend = c("Density", "Sample Mean", "95% CI"),
        col = c("black", "blue", "red"),
        lwd = 2,
        lty = c(1, 1, 2))
+
+
+
 
 #permutation----
 set.seed(1)
@@ -168,7 +182,7 @@ first_car <- function(n = 1000, p = 1/3){
 }
 # 換門後
 change_door <- function(x){
-  x2 <- ifelse(x == 0, 1, 0)
+  x2 <- ifelse(x == 0, 1, 0) #第1次沒選到跑車->1:換門會得跑車 ;第1次選到跑車->0:換門不會得跑車
   return(x2)
 }
 
@@ -176,7 +190,6 @@ change_door <- function(x){
 stay_door <- function(x){
   return(x)
 }
-
 #兩個分佈相同
 #換門
 simulate_switch_distribution <- function(B = 1000, n = 1000){
